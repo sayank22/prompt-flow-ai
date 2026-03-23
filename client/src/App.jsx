@@ -1,47 +1,48 @@
 import { useState, useEffect } from "react";
 import { ReactFlow, useNodesState, useEdgesState, Background, Controls } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import axios from "axios";
+import { ToastContainer, toast } from 'react-toastify';
+import "@xyflow/react/dist/style.css";
+import 'react-toastify/dist/ReactToastify.css'; 
+import "./App.css"; 
 
 export default function App() {
   const [prompt, setPrompt] = useState("");
-  const [result, setResult] = useState("Waiting for AI...");
+  const [result, setResult] = useState("Waiting for text...");
 
-  // 1. Use React Flow's built-in state managers
   const [nodes, setNodes, onNodesChange] = useNodesState([
     {
       id: "1",
-      position: { x: 50, y: 100 },
-      className: "nodrag", // Prevents the node from moving when you try to type!
+      position: { x: 50, y: 150 }, 
+      className: "nodrag",
       data: {
         label: (
           <textarea
-            placeholder="Type your prompt..."
+            placeholder="Type your text..."
             onChange={(e) => setPrompt(e.target.value)}
-            style={{ width: "100%", height: "50px", marginTop: "10px" }}
+            style={{ width: "100%", boxSizing: "border-box", height: "50px", marginTop: "10px", padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }}
           />
         ),
       },
     },
     {
       id: "2",
-      position: { x: 400, y: 100 },
+      position: { x: 450, y: 150 },
       data: {
-        label: <div>{result}</div>,
+        label: <div style={{ padding: "8px", maxWidth: "300px", whiteSpace: "pre-wrap" }}>{result}</div>,
       },
     },
   ]);
 
   const [edges, setEdges, onEdgesChange] = useEdgesState([
-    { id: "e1-2", source: "1", target: "2" },
+    { id: "e1-2", source: "1", target: "2", animated: true, type: "smoothstep" },
   ]);
 
-  // 2. Update the second node dynamically whenever 'result' changes
   useEffect(() => {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === "2") {
-          return { ...node, data: { ...node.data, label: <div>{result}</div> } };
+          return { ...node, data: { ...node.data, label: <div style={{ padding: "8px", maxWidth: "300px", whiteSpace: "pre-wrap" }}>{result}</div> } };
         }
         return node;
       })
@@ -49,55 +50,90 @@ export default function App() {
   }, [result, setNodes]);
 
   const runFlow = async () => {
+    if (!prompt.trim()) {
+      toast.warn("Please enter a text first!");
+      return;
+    }
+    const toastId = toast.loading("Asking AI...");
+    
     try {
-      setResult("Loading..."); // Gives the user visual feedback
       const res = await axios.post("http://localhost:5000/api/ask-ai", { prompt });
       setResult(res.data.result);
+      
+      toast.update(toastId, {
+        render: "AI responded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000
+      });
+
     } catch (error) {
       console.error(error);
       setResult("Error fetching AI response.");
+      toast.update(toastId, {
+        render: "Failed to connect to AI.",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000
+      });
     }
   };
 
   const saveFlow = async () => {
-  await axios.post(
-    "http://localhost:5000/api/save",
-    {
-      prompt,
-      response: result,
+    if (!prompt.trim() || result === "Waiting for text..." || result === "Error fetching AI response.") {
+      toast.warn("Run the flow first to generate a response before saving!");
+      return;
     }
-  );
 
-  alert("Saved to DB");
-};
+    const toastId = toast.loading("Saving to Database...");
+
+    try {
+      await axios.post("http://localhost:5000/api/save", { prompt, response: result });
+      
+      toast.update(toastId, {
+        render: "Saved securely to MongoDB!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2500
+      });
+    } catch (error) {
+      console.error(error);
+      toast.update(toastId, {
+        render: "Failed to save to database.",
+        type: "error",
+        isLoading: false,
+        autoClose: 2500
+      });
+    }
+  };
 
   return (
-    <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
-      {/* Floating button at the top left */}
-      <div style={{ position: "absolute", zIndex: 10, padding: "15px" }}>
-        <button onClick={runFlow} style={{ padding: "10px 20px", cursor: "pointer" }}>
+    <div style={{ height: "100vh", width: "100vw", position: "relative", backgroundColor: "whitesmoke" }}>
+      <ToastContainer position="top-right" theme="colored" />
+
+      {/* Run Flow Button */}
+      <div className="top-panel">
+        <button onClick={runFlow} className="modern-btn run-btn">
           Run Flow
-        </button>
-        <button onClick={saveFlow} style={{ padding: "10px 20px", cursor: "pointer" }}>
-          Save
         </button>
       </div>
 
+      {/* The React Flow Canvas */}
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange} // Allows nodes to be dragged
+        onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         fitView
       >
-        <Background color="#ccc" gap={16} />
+        <Background color="gray" gap={16} />
         <Controls />
       </ReactFlow>
 
-{/* Floating Save Button */}
-      <div style={{ position: "absolute", zIndex: 20, padding: "15px" }}>
-        <button onClick={saveFlow} style={{ padding: "10px 20px", cursor: "pointer" }}>
-          Save
+      {/* MongoDB Save Button */}
+      <div className="bottom-panel">
+        <button onClick={saveFlow} className="modern-btn save-btn">
+          Save to DB
         </button>
       </div>
     </div>
