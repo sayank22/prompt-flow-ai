@@ -133,7 +133,7 @@ export default function App() {
       {/* MongoDB Save Button */}
       <div className="bottom-panel">
         <button onClick={saveFlow} className="modern-btn save-btn">
-          Save to DB
+          Save
         </button>
       </div>
     </div>
