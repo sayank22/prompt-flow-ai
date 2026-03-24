@@ -47,7 +47,7 @@ A full-stack, interactive node-based application that allows users to visually c
 
 * **Frontend App:** [prompt-flow-ai-sayan-kundu.vercel.app](https://prompt-flow-ai-sayan-kundu.vercel.app)
 * **Backend API:** [prompt-flow-ai.onrender.com](https://prompt-flow-ai.onrender.com)
-* **Video Walkthrough:** [Watch the Demo on Loom](https://www.loom.com/share/3d1ad2d71b7346d5963f7f08d054e38d)
+* **Video Walkthrough:** [Watch the Demo on Loom](https://www.loom.com/share/e3c92856a203430f8959cc08f95ac3d1)
 
 ---
 
