@@ -19,15 +19,19 @@ const Flow = mongoose.model("Flow", FlowSchema);
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    process.env.CLIENT_URL,
+    "http://localhost:5173"
+  ]
+}));
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-
-// ASK AI ROUTE
 app.post("/api/ask-ai", async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -47,7 +51,7 @@ app.post("/api/ask-ai", async (req, res) => {
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:5173",
+          "HTTP-Referer": process.env.CLIENT_URL || "http://localhost:5173",
           "X-Title": "ai-flow-task",
         },
       }

@@ -8,7 +8,7 @@ import "./App.css";
 
 export default function App() {
   const [prompt, setPrompt] = useState("");
-  const [result, setResult] = useState("Waiting for text...");
+  const [result, setResult] = useState("Waiting for prompt...");
 
   const [nodes, setNodes, onNodesChange] = useNodesState([
     {
@@ -18,7 +18,7 @@ export default function App() {
       data: {
         label: (
           <textarea
-            placeholder="Type your text..."
+            placeholder="Type your prompt..."
             onChange={(e) => setPrompt(e.target.value)}
             style={{ width: "100%", boxSizing: "border-box", height: "50px", marginTop: "10px", padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }}
           />
@@ -51,13 +51,13 @@ export default function App() {
 
   const runFlow = async () => {
     if (!prompt.trim()) {
-      toast.warn("Please enter a text first!");
+      toast.warn("Please enter a prompt first.");
       return;
     }
     const toastId = toast.loading("Asking AI...");
     
     try {
-      const res = await axios.post("http://localhost:5000/api/ask-ai", { prompt });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/ask-ai`, { prompt });
       setResult(res.data.result);
       
       toast.update(toastId, {
@@ -80,18 +80,18 @@ export default function App() {
   };
 
   const saveFlow = async () => {
-    if (!prompt.trim() || result === "Waiting for text..." || result === "Error fetching AI response.") {
-      toast.warn("Run the flow first to generate a response before saving!");
+    if (!prompt.trim() || result === "Waiting for prompt..." || result === "Error fetching AI response.") {
+      toast.warn("Run the flow first to generate a response before saving.");
       return;
     }
 
     const toastId = toast.loading("Saving to Database...");
 
     try {
-      await axios.post("http://localhost:5000/api/save", { prompt, response: result });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/save`, { prompt, response: result });
       
       toast.update(toastId, {
-        render: "Saved securely to MongoDB!",
+        render: "Saved in MongoDB.",
         type: "success",
         isLoading: false,
         autoClose: 2500
